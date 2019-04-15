@@ -1,14 +1,15 @@
 import os
 
-from flask import Flask, render_template
-from flask_sqlalchemy import SQLAlchemy
+from flask import Flask
 
-app = Flask(__name__)
-# Set up the SQLAlchemy Database to be a local file 'desserts.db'
-app.config['SQLALCHEMY_DATABASE_URI'] = os.environ.get("DB_URI")
-db = SQLAlchemy(app)
+from .config import DB_URI
+from .models import db
 
-
-@app.route('/')
-def index():
-    return render_template('app.html')
+def create_app():
+    app = Flask(__name__)
+    app.config['SQLALCHEMY_DATABASE_URI'] = DB_URI
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.app_context().push()
+    db.init_app(app)
+    db.create_all()
+    return app

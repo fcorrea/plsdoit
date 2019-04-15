@@ -1,7 +1,7 @@
 version: '3'
 
 services:
-  mysql:
+  db:
     build: ./mysql
     ports:
       - "3306:3306"
@@ -10,17 +10,15 @@ services:
       MYSQL_USER: user
       MYSQL_PASSWORD: supersecret
 
-  featy:
+  plsdoit:
     build: ./webapp
-    restart: on-failure
-    links:
-      - mysql
     depends_on:
-      - mysql
+      - db
+    restart: on-failure
     ports:
       - "5000:5000"
     environment:
-      MYSQL_HOST: mysql
+      MYSQL_HOST: db:3306
       MYSQL_USER: user
       MYSQL_PASSWORD: supersecret
-      MYSQL_DB: pleasedoit
+      MYSQL_DB: plsdoit

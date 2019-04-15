@@ -1,5 +1,5 @@
 FROM mysql
 
-ENV MYSQL_DATABASE pleasedoit 
+ENV MYSQL_DATABASE plsdoit 
 
 COPY ./scripts/ /docker-entrypoint-initdb.d/
