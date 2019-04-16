@@ -1,4 +1,3 @@
-ALTER USER 'user' IDENTIFIED WITH mysql_native_password BY 'supersecret';
+CREATE DATABASE  test_plsdoit;
 
-CREATE DATABASE IF NOT EXISTS plsdoit;
-CREATE DATABASE IF NOT EXISTS test_plsdoit;
+GRANT ALL PRIVILEGES ON test_plsdoit.* TO 'user'@'%';

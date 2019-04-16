@@ -9,6 +9,7 @@ verify_ssl = true
 flask = "*"
 flask-sqlalchemy = "*"
 pytest = "*"
+Flask-Testing = "*"
 
 [requires]
 python_version = "3.6"
