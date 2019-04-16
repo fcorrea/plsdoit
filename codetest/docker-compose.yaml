@@ -10,7 +10,7 @@ services:
       MYSQL_USER: user
       MYSQL_PASSWORD: supersecret
 
-  plsdoit:
+  app:
     build: ./webapp
     depends_on:
       - db
