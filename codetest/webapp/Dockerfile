@@ -15,4 +15,6 @@ ENV LC_ALL en_US.UTF-8
 
 RUN pipenv install --system
 
-CMD FLASK_APP=. flask run
+ENTRYPOINT ./entrypoint.sh
+
+EXPOSE 5000

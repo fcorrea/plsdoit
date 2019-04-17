@@ -11,8 +11,7 @@ clean:
 	docker-compose rm -s -f
 
 _test:
-	docker-compose build
-	docker-compose run -e MYSQL_DB=test_plsdoit app pytest
+	docker-compose -f test.yaml up
 
 ## Run tests
 .PHONY: test

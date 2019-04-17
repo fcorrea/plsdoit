@@ -1,5 +1,6 @@
 version: '3'
 
+# FOR UNIT TESTING PURPOSES
 services:
   db:
     build: ./mysql
@@ -21,4 +22,5 @@ services:
       MYSQL_HOST: db:3306
       MYSQL_USER: user
       MYSQL_PASSWORD: supersecret
-      MYSQL_DB: plsdoit
+      MYSQL_DB: test_plsdoit
+      APP_TEST: doit # This triggers pytest inside the container
