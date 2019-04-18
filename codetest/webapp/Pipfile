@@ -10,6 +10,8 @@ flask = "*"
 flask-sqlalchemy = "*"
 pytest = "*"
 Flask-Testing = "*"
+flask-wtf = "*"
+bootstrap-flask = "*"
 
 [requires]
 python_version = "3.6"
