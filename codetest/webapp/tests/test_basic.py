@@ -12,15 +12,14 @@ class BaseTest(TestCase):
 
     def create_app(self):
 
-        # pass in test configuration
-        return create_app()
+        app = create_app()
+        app.config["TESTING"] = True
+        return app
 
     def setUp(self):
-
         db.create_all()
 
     def tearDown(self):
-
         db.session.remove()
         db.drop_all()
 

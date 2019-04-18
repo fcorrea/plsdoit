@@ -3,7 +3,7 @@ all: deploy
 ## Deploy locally
 .PHONY: deploy
 deploy:
-	docker-compose up -d --build 2> /dev/null
+	docker-compose up -d --build
 
 ## Remove all containers
 .PHONY: clean
