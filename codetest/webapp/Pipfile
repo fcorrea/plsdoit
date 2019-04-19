@@ -12,6 +12,8 @@ pytest = "*"
 Flask-Testing = "*"
 flask-wtf = "*"
 bootstrap-flask = "*"
+wtforms-sqlalchemy = "*"
+wtforms-alchemy = "*"
 
 [requires]
 python_version = "3.6"

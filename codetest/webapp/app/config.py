@@ -6,3 +6,5 @@ host = os.environ['MYSQL_HOST']
 database = os.environ['MYSQL_DB']
 
 DB_URI = f'mysql://{user}:{password}@{host}/{database}'
+
+SECRET_KEY = os.environ.get('SECRET_KEY') or 'strange-times-are-these'
