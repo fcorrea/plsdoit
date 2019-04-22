@@ -1,15 +1,45 @@
 {% extends 'base.html' %}
 {% from 'bootstrap/form.html' import render_form, render_field, render_form_row %}
 
+{% block headcss %}
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.0.0-alpha14/css/tempusdominus-bootstrap-4.min.css" />
+{% endblock %}
+
 {% block content %}
-    <h1>Request a new feature</h1>
-    <form method="post">
-    {{ form.csrf_token }}
-    {{ render_form_row([form.username, form.password]) }}
-    {{ render_form_row([form.username, form.password], col_map={'username': 'col-md-6', 'password': 'col-md-4'}) }}
-    {{ render_form_row([form.username, form.password], col_map={'username': 'col-md-2', 'password': 'col-md-8'}) }}
-    {{ render_form_row([form.username, form.password], col_class_default='col-md-2') }}
-    {{ render_form_row([form.remember]) }}
-    {{ render_form_row([form.submit]) }}
-    </form>
+  <h1>Request a new feature</h1>
+  <div id="feature-modal-form" class="modal fade">
+    <div class="modal-dialog" role="document">
+      <div class="modal-content">
+	<div class="modal-header">
+          <h1 class="modal-title">New Feature</h1>
+	</div>
+      <div class="modal-body">
+	<form method="post">
+	  {{ form.csrf_token }}
+	  {{ render_form_row([form.title]) }}
+	  {{ render_form_row([form.description]) }}
+	  <div class="form-row">
+	    <div class="col">
+	      <div class="form-group required">
+		{{ form.target_date.label(**{'class': 'form-control-label'}) }}
+		{{ form.target_date(**{'data-toggle': 'datetimepicker', 'data-target': '#datepick', 'class': 'form-control datetimepicker-input'}) }}
+	      </div>
+	    </div>
+	  </div>
+	  {{ render_form_row([form.submit]) }}
+	</form>
+      </div>
+      </div>
+    </div>
+  </div>
+  <button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#feature-modal-form">
+    New Feature
+  </button>
+{% endblock %}
+
+{% block bodyjs %}
+  <script type="text/javascript" src="{{ url_for('static', filename='app.js') }}"></script>
+
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.0.0-alpha14/js/tempusdominus-bootstrap-4.min.js"></script>
 {% endblock %}

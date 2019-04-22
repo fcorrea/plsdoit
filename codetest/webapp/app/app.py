@@ -1,6 +1,13 @@
 from flask import render_template, request
 from flask_wtf import FlaskForm
-from wtforms import StringField, SubmitField, BooleanField, PasswordField
+from wtforms import (
+    StringField,
+    DateTimeField,
+    TextAreaField,
+    SubmitField,
+    BooleanField,
+    PasswordField,
+)
 from wtforms.validators import DataRequired, Length
 from flask_bootstrap import Bootstrap
 
@@ -12,10 +19,12 @@ app = create_app()
 bootstrap = Bootstrap(app)
 
 
-class HelloForm(FlaskForm):
-    username = StringField("Username", validators=[DataRequired(), Length(1, 20)])
-    password = PasswordField("Password", validators=[DataRequired(), Length(8, 150)])
-    remember = BooleanField("Remember me")
+class RequestFeatureForm(FlaskForm):
+    title = StringField("Title", validators=[DataRequired(), Length(1, 20)])
+    description = TextAreaField(
+        "Description", validators=[DataRequired(), Length(8, 150)]
+    )
+    target_date = DateTimeField("Target Date", id="datepick")
     submit = SubmitField()
 
 
@@ -26,5 +35,5 @@ def index():
 
 @app.route("/form")
 def form():
-    form = HelloForm()
+    form = RequestFeatureForm()
     return render_template("form.html", form=form)
