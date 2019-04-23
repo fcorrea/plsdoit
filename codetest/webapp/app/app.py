@@ -8,7 +8,7 @@ from wtforms.validators import DataRequired, Length
 from wtforms_alchemy import model_form_factory, ModelFormField, QuerySelectField
 from wtforms_alchemy.utils import choice_type_coerce_factory
 
-from .models import db, FeatureRequest, Client, Priority
+from .models import db, FeatureRequest, Client, Priority, ProductArea
 from . import create_app
 
 BaseModelForm = model_form_factory(FlaskForm)
@@ -40,6 +40,11 @@ class RequestFeatureForm(ModelForm):
     priority = SelectField(
         choices=Priority.PRIORITIES,
         coerce=choice_type_coerce_factory(Priority.value.type),
+        validators=[DataRequired()],
+    )
+    product_area = SelectField(
+        choices=ProductArea.AREAS,
+        coerce=choice_type_coerce_factory(ProductArea.name.type),
         validators=[DataRequired()],
     )
     submit = SubmitField()

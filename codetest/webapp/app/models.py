@@ -22,8 +22,10 @@ class Priority(db.Model):
 
 class ProductArea(db.Model):
 
+    AREAS = [(1, u"Policies"), (2, u"Billing"), (3, u"Claim"), (4, u"Reports")]
+
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), nullable=False)
+    name = db.Column(ChoiceType(AREAS))
 
 
 class FeatureRequest(db.Model):
@@ -49,3 +51,30 @@ class FeatureRequest(db.Model):
     product_area = db.relationship(
         ProductArea, backref=db.backref("product_area", lazy=True)
     )
+
+
+def initialise_clients():
+    """Insert default Client data into the database"""
+    default_clients = [u"Client A", u"Client B", u"Client C"]
+    for name in default_clients:
+        client = Client(name=name)
+        db.session.add(client)
+        db.session.commit()
+
+
+def initialise_priority():
+    """Insert default Priority data into the database"""
+    default_priorities = [1, 2, 3, 4]
+    for value in default_priorities:
+        priority = Priority(value=value)
+        db.session.add(priority)
+        db.session.commit()
+
+
+def initialise_product_area():
+    """Insert default ProductArea data into the database"""
+    default_product_areas = [u"Policies", u"Billing", u"Claims", u"Reports"]
+    for name in default_product_areas:
+        product_area = ProductArea(name=name)
+        db.session.add(product_area)
+        db.session.commit()
