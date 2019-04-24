@@ -2,7 +2,7 @@ import os
 
 from flask_testing import TestCase
 
-from ..app import create_app
+from .. import create_app
 from ..models import db
 
 
@@ -23,4 +23,6 @@ class BaseTest(TestCase):
         db.drop_all()
 
     def testFoo(self):
-        assert os.environ["MYSQL_DB"] == 'Fooo'
+        response = self.client.get("/")
+
+        assert "" == response.data

@@ -53,6 +53,16 @@ class FeatureRequest(db.Model):
     )
 
 
+def initialise_data():
+    """Initialize database with default values"""
+    if db.session.query(Client).count() == 0:
+        initialise_clients()
+    if db.session.query(Priority).count() == 0:
+        initialise_priority()
+    if db.session.query(ProductArea).count() == 0:
+        initialise_product_area()
+
+
 def initialise_clients():
     """Insert default Client data into the database"""
     default_clients = [u"Client A", u"Client B", u"Client C"]

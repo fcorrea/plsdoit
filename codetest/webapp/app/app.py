@@ -1,15 +1,13 @@
-from flask import render_template, request
-
-from flask_bootstrap import Bootstrap
-
-from wtforms import DateTimeField, SubmitField, SelectField
+from flask import render_template, request, Blueprint
 from flask_wtf import FlaskForm
+from wtforms import DateTimeField, SubmitField, SelectField
 from wtforms.validators import DataRequired, Length
 from wtforms_alchemy import model_form_factory, ModelFormField, QuerySelectField
 from wtforms_alchemy.utils import choice_type_coerce_factory
 
 from .models import db, FeatureRequest, Client, Priority, ProductArea
-from . import create_app
+
+features = Blueprint("features", __name__, template_folder="templates")
 
 BaseModelForm = model_form_factory(FlaskForm)
 
@@ -18,11 +16,6 @@ class ModelForm(BaseModelForm):
     @classmethod
     def get_session(self):
         return db.session
-
-
-app = create_app()
-
-bootstrap = Bootstrap(app)
 
 
 class RequestFeatureForm(ModelForm):
@@ -50,13 +43,14 @@ class RequestFeatureForm(ModelForm):
     submit = SubmitField()
 
 
-@app.route("/", methods=["GET", "POST"])
+@features.route("/")
 def index():
     form = RequestFeatureForm()
     return render_template("index.html", form=form)
 
 
-@app.route("/form")
-def form():
+@features.route("/new", methods=["POST"])
+def new():
     form = RequestFeatureForm()
-    return render_template("form.html", form=form)
+
+    return render_template("index.html", form=form)
