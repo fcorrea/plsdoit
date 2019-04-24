@@ -50,7 +50,7 @@ class RequestFeatureForm(ModelForm):
     submit = SubmitField()
 
 
-@app.route("/", methods=["POST"])
+@app.route("/", methods=["GET", "POST"])
 def index():
     form = RequestFeatureForm()
     return render_template("index.html", form=form)
