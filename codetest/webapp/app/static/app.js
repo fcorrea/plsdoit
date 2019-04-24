@@ -1,5 +1,6 @@
 $(function () {
     $('#datepick').datetimepicker({
-        format: 'L'
+        format: 'L',
+	minDate: moment()
     });
 });
