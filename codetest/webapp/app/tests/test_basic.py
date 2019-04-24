@@ -2,7 +2,7 @@ import os
 
 from flask_testing import TestCase
 
-from .. import create_app
+from ..app import create_app
 from ..models import db
 
 
@@ -11,7 +11,6 @@ class BaseTest(TestCase):
     TESTING = True
 
     def create_app(self):
-
         app = create_app()
         app.config["TESTING"] = True
         return app
