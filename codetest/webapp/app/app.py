@@ -1,6 +1,6 @@
 from flask import render_template, request, Blueprint
 from flask_wtf import FlaskForm
-from wtforms import DateTimeField, SubmitField, SelectField
+from wtforms import DateField, SubmitField, SelectField
 from wtforms.validators import DataRequired, Length
 from wtforms_alchemy import model_form_factory, ModelFormField, QuerySelectField
 from wtforms_alchemy.utils import choice_type_coerce_factory
@@ -22,22 +22,17 @@ class RequestFeatureForm(ModelForm):
     class Meta:
         model = FeatureRequest
 
-    target_date = DateTimeField("Target Date", id="datepick")
-    client = QuerySelectField(
-        query_factory=lambda: Client.query.all(),
-        get_pk=lambda a: a.id,
-        get_label=lambda a: a.name,
-        allow_blank=False,
-        blank_text=u"-- please choose --",
+    target_date = DateField("Target Date", id="datepick", format="%m/%d/%Y")
+    client_id = SelectField(
+        "Client", choices=Client.CLIENTS, coerce=int, validators=[DataRequired()]
     )
-    priority = SelectField(
-        choices=Priority.PRIORITIES,
-        coerce=choice_type_coerce_factory(Priority.value.type),
-        validators=[DataRequired()],
+    client_priority_id = SelectField(
+        "Priority", choices=Priority.PRIORITIES, coerce=int, validators=[DataRequired()]
     )
-    product_area = SelectField(
+    product_area_id = SelectField(
+        "Product Area",
         choices=ProductArea.AREAS,
-        coerce=choice_type_coerce_factory(ProductArea.name.type),
+        coerce=int,
         validators=[DataRequired()],
     )
     submit = SubmitField()
@@ -52,5 +47,9 @@ def index():
 @features.route("/new", methods=["POST"])
 def new():
     form = RequestFeatureForm()
-
+    if form.validate_on_submit():
+        feature_request = FeatureRequest()
+        form.populate_obj(feature_request)
+        db.session.add(feature_request)
+        db.session.commit()
     return render_template("index.html", form=form)

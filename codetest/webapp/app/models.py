@@ -8,8 +8,10 @@ db = flask_sqlalchemy.SQLAlchemy()
 
 class Client(db.Model):
 
+    CLIENTS = [(1, u"Client A"), (2, u"Client B"), (3, u"Client C")]
+
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(db.String(80), nullable=False)
+    name = db.Column(ChoiceType(CLIENTS))
 
 
 class Priority(db.Model):
@@ -43,13 +45,13 @@ class FeatureRequest(db.Model):
         db.Integer, db.ForeignKey(Priority.id), nullable=False
     )
     client_priority = db.relationship(
-        Priority, backref=db.backref("priority", lazy=True)
+        Priority, backref=db.backref("feature_request", lazy=True)
     )
     product_area_id = db.Column(
         db.Integer, db.ForeignKey(ProductArea.id), nullable=False
     )
     product_area = db.relationship(
-        ProductArea, backref=db.backref("product_area", lazy=True)
+        ProductArea, backref=db.backref("feature_request", lazy=True)
     )
 
 
@@ -74,7 +76,7 @@ def initialise_clients():
 
 def initialise_priority():
     """Insert default Priority data into the database"""
-    default_priorities = [1, 2, 3, 4]
+    default_priorities = [u"Very High", u"High", u"Medium", "Low"]
     for value in default_priorities:
         priority = Priority(value=value)
         db.session.add(priority)

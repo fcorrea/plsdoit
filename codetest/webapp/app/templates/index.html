@@ -11,7 +11,7 @@
     <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
 	<div class="modal-header">
-          <h1 class="modal-title">Request a New Feature</h1>
+          <h1 class="modal-title">Request New Feature</h1>
 	</div>
       <div class="modal-body">
 	<form method="post">
@@ -26,9 +26,9 @@
 	      </div>
 	    </div>
 	  </div>
-	  {{ render_form_row([form.client]) }}
-	  {{ render_form_row([form.priority]) }}
-	  {{ render_form_row([form.product_area]) }}
+	  {{ render_form_row([form.client_id]) }}
+	  {{ render_form_row([form.client_priority_id]) }}
+	  {{ render_form_row([form.product_area_id]) }}
 	  {{ render_form_row([form.submit]) }}
 	</form>
       </div>

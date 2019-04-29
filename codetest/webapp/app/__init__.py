@@ -14,8 +14,7 @@ def create_app():
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["SECRET_KEY"] = SECRET_KEY
     app.app_context().push()
-
-    bootstrap = Bootstrap(app)
+    Bootstrap(app)
 
     from .models import db, initialise_data
 
