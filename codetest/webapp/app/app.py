@@ -47,11 +47,49 @@ def index():
 def new():
     form = RequestFeatureForm()
     if form.validate_on_submit():
-        existing = db.session.query(FeatureRequest).filter(
-            FeatureRequest.title == form.title
+        client_id = form.client_id.data
+        client_priority = form.client_priority.data
+        existing = (
+            db.session.query(FeatureRequest)
+            .filter(
+                FeatureRequest.client_id == client_id,
+                FeatureRequest.client_priority == client_priority,
+            )
+            .order_by(FeatureRequest.client_priority)
         )
+        if existing.count() == 1:
+            # Check for gaps
+            gap = (
+                db.session.query(FeatureRequest)
+                .filter(
+                    FeatureRequest.client_id == client_id,
+                    FeatureRequest.client_priority == client_priority + 1,
+                )
+                .count()
+            )
+            reset_priority(
+                client_id, base_priority=client_priority, propagate=bool(gap)
+            )
+
         feature_request = FeatureRequest()
         form.populate_obj(feature_request)
         db.session.add(feature_request)
         db.session.commit()
+
     return jsonify(form.errors)
+
+
+def reset_priority(client_id, base_priority=None, propagate=False):
+    """Reset priority of `FeatureRequest`s using `base_priority`.
+    When `propagate` is `True`, all records will have their `client_priority`
+    bumped. 
+    """
+    reach = (
+        FeatureRequest.client_priority >= base_priority
+        if propagate
+        else FeatureRequest.client_priority == base_priority
+    )
+    db.session.query(FeatureRequest).filter(
+        FeatureRequest.client_id == client_id, reach
+    ).update({FeatureRequest.client_priority: FeatureRequest.client_priority + 1})
+    db.session.commit()
