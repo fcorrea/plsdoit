@@ -8,18 +8,20 @@ db = flask_sqlalchemy.SQLAlchemy()
 
 class Client(db.Model):
 
-    CLIENTS = [(1, u"Client A"), (2, u"Client B"), (3, u"Client C")]
+    TYPES = [(1, u"Client A"), (2, u"Client B"), (3, u"Client C")]
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(ChoiceType(CLIENTS))
+    name = db.Column(db.String(100))
+    type = db.Column(ChoiceType(TYPES))
 
 
 class ProductArea(db.Model):
 
-    AREAS = [(1, u"Policies"), (2, u"Billing"), (3, u"Claim"), (4, u"Reports")]
+    TYPES = [(1, u"Policies"), (2, u"Billing"), (3, u"Claim"), (4, u"Reports")]
 
     id = db.Column(db.Integer, primary_key=True)
-    name = db.Column(ChoiceType(AREAS))
+    name = db.Column(db.String(100))
+    type = db.Column(ChoiceType(TYPES))
 
 
 class FeatureRequest(db.Model):
@@ -35,13 +37,26 @@ class FeatureRequest(db.Model):
     )
 
     client_id = db.Column(db.Integer, db.ForeignKey(Client.id), nullable=False)
-    client = db.relationship(Client, backref=db.backref("feature_request", lazy=True))
+    client = db.relationship(Client, foreign_keys=[client_id])
     product_area_id = db.Column(
         db.Integer, db.ForeignKey(ProductArea.id), nullable=False
     )
     product_area = db.relationship(
         ProductArea, backref=db.backref("feature_request", lazy=True)
     )
+
+    @property
+    def serialize(self):
+        """Create a serializable data strucutre"""
+        return {
+            "id": self.id,
+            "title": self.title,
+            "description": self.description,
+            "target_date": self.target_date.strftime("%m/%d/%Y"),
+            "client": self.client.name,
+            "product_area": self.product_area.name,
+            "client_priority": self.client_priority,
+        }
 
 
 def initialise_data():

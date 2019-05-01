@@ -4,6 +4,8 @@ $(function () {
         format: 'L',
 	minDate: moment(),
 	useCurrent: false,
+        inline: true,
+        sideBySide: true,
 	icons: {
 	    time: 'far fa-clock',
 	    date: 'far fa-calendar-alt',

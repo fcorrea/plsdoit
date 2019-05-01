@@ -1,5 +1,5 @@
 import os
-from datetime import datetime
+from datetime import date
 
 from flask_testing import TestCase
 
@@ -28,7 +28,7 @@ class TestFeatureRequestApp(TestCase):
         data = dict(
             title=title or u"A new feature",
             description=u"A nice description",
-            target_date=datetime.now(),
+            target_date=date(2019, 5, 1),
             client_id=1,
             client_priority=client_priority,
             product_area_id=2,
@@ -148,7 +148,7 @@ class TestFeatureRequestApp(TestCase):
         form_data = dict(feature_request_id=1)
         response = self.client.post("/delete", data=form_data)
         assert response.get_json() == {
-            "message": "Successfully created new feature request"
+            "status": "Successfully deleted new feature request"
         }
         result = db.session.query(FeatureRequest).count()
         assert result == 0
@@ -157,7 +157,7 @@ class TestFeatureRequestApp(TestCase):
         self._makeOne()
         form_data = dict(feature_request_id=2)
         response = self.client.post("/delete", data=form_data)
-        assert response.get_json() == {"message": "Could not delete feature request"}
+        assert response.get_json() == {"status": "Could not delete feature request"}
         result = db.session.query(FeatureRequest).count()
         assert result == 1
 
@@ -177,7 +177,7 @@ class TestFeatureRequestApp(TestCase):
 
         response = self.client.post("/edit", data=form_data)
         assert response.get_json() == {
-            "message": "Successfully changed feature request."
+            "status": "Successfully changed feature request."
         }
         result = db.session.query(FeatureRequest).one()
         assert result.description == u"A nice description changed"
@@ -199,7 +199,7 @@ class TestFeatureRequestApp(TestCase):
 
         response = self.client.post("/edit", data=form_data)
         assert response.get_json() == {
-            "message": "Successfully changed feature request. Client priority was reset."
+            "status": "Successfully changed feature request. Client priority was reset."
         }
         # A reorder happened. The first FeatureRequest is now the second.
         result = (
@@ -208,3 +208,32 @@ class TestFeatureRequestApp(TestCase):
             .one()
         )
         assert result.title == u"Feature with priority 1"
+        assert FeatureRequest.query.get(2).client_priority == 1
+
+    def test_app_list(self):
+        self._makeOne(title=u"Feature with priority {}".format(1), client_priority=1)
+        self._makeOne(title=u"Feature with priority {}".format(2), client_priority=2)
+
+        response = self.client.post("/list")
+        a_date = date(2019, 5, 1).strftime("%m/%d/%Y")
+        expected = [
+            {
+                "client": "Client A",
+                "client_priority": 1,
+                "description": "A nice description",
+                "id": 1,
+                "product_area": "Billing",
+                "target_date": a_date,
+                "title": "Feature with priority 1",
+            },
+            {
+                "client": "Client A",
+                "client_priority": 2,
+                "description": "A nice description",
+                "id": 2,
+                "product_area": "Billing",
+                "target_date": a_date,
+                "title": "Feature with priority 2",
+            },
+        ]
+        assert response.get_json() == expected

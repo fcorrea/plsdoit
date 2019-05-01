@@ -25,12 +25,12 @@ class RequestFeatureForm(ModelForm):
 
     target_date = DateField("Target Date", id="datepick", format="%m/%d/%Y")
     client_id = SelectField(
-        "Client", choices=Client.CLIENTS, coerce=int, validators=[DataRequired()]
+        "Client", choices=Client.TYPES, coerce=int, validators=[DataRequired()]
     )
-    client_priority = IntegerField(validators=[NumberRange(min=1)])
+    client_priority = IntegerField(default=1, validators=[NumberRange(min=1)])
     product_area_id = SelectField(
         "Product Area",
-        choices=ProductArea.AREAS,
+        choices=ProductArea.TYPES,
         coerce=int,
         validators=[DataRequired()],
     )
@@ -70,7 +70,7 @@ def new():
 
 @features.route("/delete", methods=["POST"])
 def delete():
-    message = {"message": "success"}
+    message = {"status": "success"}
     feature_request_id = request.form.get("feature_request_id")
     result = (
         db.session.query(FeatureRequest)
@@ -78,9 +78,9 @@ def delete():
         .delete()
     )
     if result:
-        message = {"message": "Successfully created new feature request"}
+        message = {"status": "Successfully deleted new feature request"}
     else:
-        message = {"message": "Could not delete feature request"}
+        message = {"status": "Could not delete feature request"}
     db.session.commit()
     return jsonify(message)
 
@@ -90,7 +90,7 @@ def edit():
     id = request.form.get("feature_request_id")
     feature_request = FeatureRequest.query.get_or_404(id)
     form = RequestFeatureForm(obj=feature_request)
-    message = {"message": u"Successfully changed feature request."}
+    message = {"status": u"Successfully changed feature request."}
     if form.validate_on_submit():
         client_id = form.client_id.data
         client_priority = form.client_priority.data
@@ -105,12 +105,18 @@ def edit():
         )
         if existing.count() == 1:
             reset_priority(client_id, base_priority=client_priority)
-            message["message"] += u" Client priority was reset."
+            message["status"] += u" Client priority was reset."
 
         form.populate_obj(feature_request)
         db.session.commit()
 
     return jsonify(message)
+
+
+@features.route("/list", methods=["POST"])
+def list():
+    result = [i.serialize for i in FeatureRequest.query.all()]
+    return jsonify(result)
 
 
 def reset_priority(client_id, base_priority=None):
