@@ -1,38 +1,67 @@
-{% from 'bootstrap/nav.html' import render_nav_item %}
 <!DOCTYPE html>
-<html lang="en">
-<head>
+<html>
+  <head>
     <meta charset="utf-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
-    <title>Feature Request Application</title>
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>PLSDoIt! - Feature Request System</title>
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
     {{ bootstrap.load_css() }}
+    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:700, 600,500,400,300" rel="stylesheet" type="text/css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
+    <link rel="stylesheet" href="http://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
+    <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
     {% block headcss %}{% endblock %}
-</head>
-<body>
-<main class="container">
-    <nav class="navbar navbar-expand-lg navbar-light bg-light">
-        <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
-                aria-controls="navbarSupportedContent" aria-expanded="false" aria-label="Toggle navigation">
-            <span class="navbar-toggler-icon"></span>
-        </button>
-        <div class="collapse navbar-collapse" id="navbarSupportedContent">
-            <ul class="navbar-nav mr-auto">
-                {{ render_nav_item('.index', 'Home', use_li=True) }}
-            </ul>
-        </div>
-    </nav>
-    {% block content %}{% endblock %}
-    <footer class="text-center">
-        {% block footer %}
-            <small> A Simple Feature Request App</small>
-        {% endblock %}
-    </footer>
-</main>
+  </head>
+  <body>
+    <div class="header">
+      <div class="logo">
+	<i class="fa fa-cogs"></i>
+	<span>Brand</span>
+      </div>
+      <a href="#" class="nav-trigger"><span></span></a>
+    </div>
+    <div class="side-nav">
+      <div class="logo">
+	<i class="fa fa-cogs"></i>
+	<span>PLSDoIt!</span>
+      </div>
+      <nav>
+	<ul>
+	  <li>
+	    <a href="#">
+	      <span><i class="fa fa-user"></i></span>
+	      <span>Users</span>
+	    </a>
+	  </li>
+	  <li>
+	    <a href="#">
+	      
+	      <span><i class="fa fa-envelope"></i></span>
+	      <span>Messages</span>
+	    </a>
+	  </li>
+	  <li class="active">
+	    <a href="#">
+	      <span><i class="fa fa-bar-chart"></i></span>
+	      <span>Analytics</span>
+	    </a>
+	  </li>
+	  <li>
+	    <a href="#">
+	      <span><i class="fa fa-credit-card-alt"></i></span>
+	      <span>Payments</span>
+	    </a>
+	  </li>
+	</ul>
+      </nav>
+    </div>
+    <div class="main-content">
+      {% block content %}{% endblock %}
+    </div>
 
-{{ bootstrap.load_js() }}
-
-{% block bodyjs %}{% endblock %}
-</body>
+    {{ bootstrap.load_js() }}
+    
+    {% block bodyjs %}{% endblock %}
+  </body>
 </html>

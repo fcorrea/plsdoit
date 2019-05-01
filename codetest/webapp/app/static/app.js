@@ -18,4 +18,10 @@ $(function () {
 	    close: 'fas fa-times'
 	}
     });
+
+    $(document).ready(function() {
+	$('.nav-trigger').click(function() {
+	    $('.side-nav').toggleClass('visible');
+	});
+    });
 });
