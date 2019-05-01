@@ -136,3 +136,75 @@ class TestFeatureRequestApp(TestCase):
         assert result[0].client_priority == 4
         assert result[1].title == u"Feature with priority 5"
         assert result[1].client_priority == 5
+        result = (
+            db.session.query(FeatureRequest)
+            .filter(FeatureRequest.client_priority == 3)
+            .count()
+        )
+        assert result == 0
+
+    def test_app_delete_feature_request(self):
+        self._makeOne()
+        form_data = dict(feature_request_id=1)
+        response = self.client.post("/delete", data=form_data)
+        assert response.get_json() == {
+            "message": "Successfully created new feature request"
+        }
+        result = db.session.query(FeatureRequest).count()
+        assert result == 0
+
+    def test_app_delete_feature_request_non_existing(self):
+        self._makeOne()
+        form_data = dict(feature_request_id=2)
+        response = self.client.post("/delete", data=form_data)
+        assert response.get_json() == {"message": "Could not delete feature request"}
+        result = db.session.query(FeatureRequest).count()
+        assert result == 1
+
+    def test_app_edit_feature_request(self):
+        self._makeOne()
+
+        form_data = dict(
+            feature_request_id=u"1",
+            title=u"A new feature",
+            description=u"A nice description changed",
+            target_date=u"04/24/2019",
+            client_id=u"1",
+            client_priority=u"1",
+            product_area_id=u"2",
+            submit=True,
+        )
+
+        response = self.client.post("/edit", data=form_data)
+        assert response.get_json() == {
+            "message": "Successfully changed feature request."
+        }
+        result = db.session.query(FeatureRequest).one()
+        assert result.description == u"A nice description changed"
+
+    def test_app_edit_feature_request_change_priority(self):
+        self._makeOne(title=u"Feature with priority {}".format(1), client_priority=1)
+        self._makeOne(title=u"Feature with priority {}".format(2), client_priority=2)
+
+        form_data = dict(
+            feature_request_id=u"2",
+            title=u"A new feature",
+            description=u"A nice description changed",
+            target_date=u"04/24/2019",
+            client_id=u"1",
+            client_priority=u"1",
+            product_area_id=u"2",
+            submit=True,
+        )
+
+        response = self.client.post("/edit", data=form_data)
+        assert response.get_json() == {
+            "message": "Successfully changed feature request. Client priority was reset."
+        }
+        # A reorder happened. The first FeatureRequest is now the second.
+        result = (
+            db.session.query(FeatureRequest)
+            .filter(FeatureRequest.client_priority == 2)
+            .one()
+        )
+        assert result.title == u"Feature with priority 1"

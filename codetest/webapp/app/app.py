@@ -79,9 +79,66 @@ def new():
     return jsonify(form.errors)
 
 
+@features.route("/delete", methods=["POST"])
+def delete():
+    message = {"message": "success"}
+    feature_request_id = request.form.get("feature_request_id")
+    result = (
+        db.session.query(FeatureRequest)
+        .filter(FeatureRequest.id == feature_request_id)
+        .delete()
+    )
+    if result:
+        message = {"message": "Successfully created new feature request"}
+    else:
+        message = {"message": "Could not delete feature request"}
+    db.session.commit()
+    return jsonify(message)
+
+
+@features.route("/edit", methods=["POST"])
+def edit():
+    id = request.form.get("feature_request_id")
+    feature_request = FeatureRequest.query.get_or_404(id)
+    form = RequestFeatureForm(obj=feature_request)
+    message = {"message": u"Successfully changed feature request."}
+    if form.validate_on_submit():
+        client_id = form.client_id.data
+        client_priority = form.client_priority.data
+        existing = (
+            db.session.query(FeatureRequest)
+            .filter(
+                FeatureRequest.client_id == client_id,
+                FeatureRequest.client_priority == client_priority,
+                FeatureRequest.id != id,
+            )
+            .order_by(FeatureRequest.client_priority)
+        )
+        if existing.count() == 1:
+            # Check for gaps
+            gap = (
+                db.session.query(FeatureRequest)
+                .filter(
+                    FeatureRequest.client_id == client_id,
+                    FeatureRequest.client_priority == client_priority + 1,
+                )
+                .count()
+            )
+            reset_priority(
+                client_id, base_priority=client_priority, propagate=bool(gap)
+            )
+            message["message"] += u" Client priority was reset."
+
+        form.populate_obj(feature_request)
+        db.session.commit()
+
+    return jsonify(message)
+
+
 def reset_priority(client_id, base_priority=None, propagate=False):
-    """Reset priority of `FeatureRequest`s using `base_priority`.
-    When `propagate` is `True`, all records will have their `client_priority`
+    """Reset priority of ``FeatureRequest``s using ``base_priority``.
+
+    When ``propagate`` is ``True``, all records will have their ``client_priority``
     bumped. 
     """
     reach = (
