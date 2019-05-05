@@ -7,7 +7,7 @@
     <title>PLSDoIt! - Feature Request System</title>
     <link rel="icon" href="{{ url_for('static', filename='favicon.ico') }}">
     {{ bootstrap.load_css() }}
-    <link href="https://fonts.googleapis.com/css?family=Source+Sans+Pro:700, 600,500,400,300" rel="stylesheet" type="text/css">
+    <link href="https://fonts.googleapis.com/css?family=Roboto:700, 600,500,400,300" rel="stylesheet" type="text/css">
     <link rel="stylesheet" href="https://use.fontawesome.com/releases/v5.8.1/css/all.css" integrity="sha384-50oBUHEmvpQ+1lW4y57PTFmhCaXp0ML5d60M1M7uH2+nqUivzIebhndOJK28anvf" crossorigin="anonymous">
     <link rel="stylesheet" href="http://code.ionicframework.com/ionicons/2.0.1/css/ionicons.min.css">
     <link rel="stylesheet" href="{{ url_for('static', filename='app.css') }}">
@@ -17,9 +17,23 @@
     <div class="header">
       <div class="logo">
 	<i class="fa fa-cogs"></i>
-	<span>Brand</span>
+	<span>PLSDoIt!</span>
       </div>
-      <a href="#" class="nav-trigger"><span></span></a>
+      <a href="#" class="nav-trigger">
+	<span></span>
+      </a>
+
+      <div class="avatar">
+	<div class="row">
+          <div class="col-xs-7">
+            <img src="https://randomuser.me/api/portraits/men/34.jpg" class="rounded-circle user-icon" />
+          </div>
+          <div class="col-xs-7 user-name">
+            <span>James J. Krupf</span>
+          </div>
+	</div>
+      </div>
+      
     </div>
     <div class="side-nav">
       <div class="logo">
@@ -30,28 +44,17 @@
 	<ul>
 	  <li>
 	    <a href="#">
-	      <span><i class="fa fa-user"></i></span>
-	      <span>Users</span>
+	      <span><i class="fa fa-user-tie"></i></span>
+	      <span>Client</span>
 	    </a>
+	    {% block client_counts %}{% endblock %}
 	  </li>
 	  <li>
 	    <a href="#">
-	      
-	      <span><i class="fa fa-envelope"></i></span>
-	      <span>Messages</span>
+	      <span><i class="fa fa-exclamation-triangle"></i></span>
+	      <span>Priorities</span>
 	    </a>
-	  </li>
-	  <li class="active">
-	    <a href="#">
-	      <span><i class="fa fa-bar-chart"></i></span>
-	      <span>Analytics</span>
-	    </a>
-	  </li>
-	  <li>
-	    <a href="#">
-	      <span><i class="fa fa-credit-card-alt"></i></span>
-	      <span>Payments</span>
-	    </a>
+	    {% block priority_counts %}{% endblock %}
 	  </li>
 	</ul>
       </nav>

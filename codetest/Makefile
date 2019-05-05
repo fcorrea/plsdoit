@@ -16,3 +16,8 @@ _test:
 ## Run tests
 .PHONY: test
 test: _test clean
+
+## Sample data
+.PHONY: sample-data
+sample-data: 
+	docker-compose exec app flask load_sample

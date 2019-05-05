@@ -3,6 +3,10 @@ PLSDoIt: A Feature Request App
 
 PLSDoIt is a feature request app. It allows for easy deployment so that organizations can hear back from their customers and community and create better products.
 
+Here's what it looks like:
+
+
+
 
 ## Table of content
 

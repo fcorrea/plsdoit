@@ -2,19 +2,107 @@
 {% from 'bootstrap/form.html' import render_form, render_field, render_form_row %}
 
 {% block headcss %}
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.0.0-alpha14/css/tempusdominus-bootstrap-4.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.0.0-alpha14/css/tempusdominus-bootstrap-4.min.css" />
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/gijgo/1.9.13/combined/css/gijgo.min.css" />
+<script>
+  var saveURL;
+  var newURL = "{{ url_for('features.new') }}";
+  var editURL = "{{ url_for('features.edit') }}";
+</script>
+<script type="text/javascript">
+    var csrf_token = "{{ csrf_token() }}";
+</script>
 {% endblock %}
 
+{% block client_counts %}
+  <ul class="feature-nav-submenu">
+    {% for client in client_counts %}
+      <li class="feature-nav-by-client">
+	<div class="row">
+	  <div class="col-9">
+	    <a href="#" data-query-client="{{ client.id }}"><span>{{ client.name }}</span></a>
+	  </div>
+	  <div class="col-3">
+	    <span class="badge badge-warning count">{{ client.count }}</span>
+	  </div>
+	</div>
+      </li>
+    {% endfor %}
+{% endblock %}
+  
+{% block priority_counts %}
+  <ul class="feature-nav-submenu">
+    {% for priority in priority_counts %}
+      <li class="feature-nav-by-priority">
+	<div class="row">
+	  <div class="col-9">
+	    <a href="#" data-query-priority="{{ priority.priority }}"><span>#{{ priority.priority }} priorities</span></a>
+	  </div>
+	  <div class="col-3">
+	    <span class="{{ priority.css_badge }}">{{ priority.count }}</span>
+	  </div>
+	</div>
+      </li>
+    {% endfor %}
+{% endblock %}
+ 
 {% block content %}
-  <h1>List of feature requests</h1>
+  <h1>Feature Requests</h1>
+
+  <div class="row">
+    <div class="col-6">
+      <div class="row">
+	<div class="col-9">
+	  <form class="form-inline">
+            <input id="feature-request-title" type="text" placeholder="Title..." class="form-control mb-2 mr-sm-2 mb-sm-0" />   
+            <button id="search-feature" type="button" class="btn btn-default">Search</button> &nbsp;
+            <button id="clear-search" type="button" class="btn btn-default">Clear</button> &nbsp;
+	    <button type="button" class="btn btn-primary" data-toggle="modal" data-target="#feature-modal-form">New Feature</button>
+	  </form>
+	</div>
+	<div class="col-3">
+	</div>
+      </div>
+      <div class="row" style="margin-top: 10px">
+	<div class="col-12">
+	  <table id="grid"></table>
+	</div>
+      </div>
+    </div>
+    
+    <div class="col-6 feature-request-details" style="display: none">
+      <p class="feature-title" id="feature-title">Create something magical</p>
+      
+      <dl class="row">
+	<dt class="col-sm-3">Priority</dt>
+	<dd class="col-sm-9" id="feature-priority">1</dd>
+
+	<dt class="col-sm-3">Target Date</dt>
+	<dd class="col-sm-9" id="feature-target-date">05/03/2019</dd>
+
+	<dt class="col-sm-3">Client</dt>
+	<dd class="col-sm-9" id="feature-client">Client 1</dd>
+	
+	<dt class="col-sm-3">Product Area</dt>
+	<dd class="col-sm-9" id="feature-product-area">Claims</dd>
+      </dl>
+      
+      
+      <p class="h3">Description</p>
+      <p id="feature-description">Unwilling sportsmen he in questions september therefore described so. Attacks may set few believe moments was. Reasonably how possession shy way introduced age inquietude. Missed he engage no exeter of. Still tried means we aware order among on. Eldest father can design tastes did joy settle. Roused future he ye an marked. Arose mr rapid in so vexed words. Gay welcome led add lasting chiefly say looking.</p>
+
+    </div>
+  </div>
+  
   <div id="feature-modal-form" class="modal fade">
     <div class="modal-dialog modal-lg" role="document">
       <div class="modal-content">
 	<div class="modal-header">
-          <h1 class="modal-title">Request New Feature</h1>
+          <h1 class="modal-title" id="new-feature-request-title">Request New Feature</h1>
+	  <h1 class="modal-title" id="edit-feature-request-title" style="display: none;">Edit Feature Request</h1>
 	</div>
       <div class="modal-body">
-	<form method="post">
+	<form id="feature-request-form" method="post">
 	  {{ form.csrf_token }}
 	  {{ render_form_row([form.title]) }}
 	  {{ render_form_row([form.description]) }}
@@ -30,19 +118,18 @@
 	  {{ render_form_row([form.client_priority]) }}
 	  {{ render_form_row([form.product_area_id]) }}
 	  {{ render_form_row([form.submit]) }}
+	  <input type="hidden" name="feature_request_id" id="feature-request-id" value="" />
 	</form>
       </div>
       </div>
     </div>
   </div>
-  <button type="button" class="btn btn-primary btn-lg" data-toggle="modal" data-target="#feature-modal-form">
-    New Feature
-  </button>
 {% endblock %}
 
 {% block bodyjs %}
   <script type="text/javascript" src="{{ url_for('static', filename='app.js') }}"></script>
 
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/moment.js/2.24.0/moment.min.js"></script>
+  <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/gijgo/1.9.13/combined/js/gijgo.min.js"></script>
   <script type="text/javascript" src="https://cdnjs.cloudflare.com/ajax/libs/tempusdominus-bootstrap-4/5.0.0-alpha14/js/tempusdominus-bootstrap-4.min.js"></script>
 {% endblock %}

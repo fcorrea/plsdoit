@@ -5,12 +5,22 @@ from wtforms_components.fields import IntegerField
 from wtforms.validators import DataRequired, Length, NumberRange
 from wtforms_alchemy import model_form_factory, ModelFormField, QuerySelectField
 from wtforms_alchemy.utils import choice_type_coerce_factory
+from sqlalchemy import func
 
 from .models import db, FeatureRequest, Client, ProductArea
 
 features = Blueprint("features", __name__, template_folder="templates")
 
 BaseModelForm = model_form_factory(FlaskForm)
+
+DEFAULT_LIMIT = 5
+
+
+SORTING_MAP = {
+    "title": FeatureRequest.title,
+    "client": FeatureRequest.client_id,
+    "client_priority": FeatureRequest.client_priority,
+}
 
 
 class ModelForm(BaseModelForm):
@@ -40,7 +50,15 @@ class RequestFeatureForm(ModelForm):
 @features.route("/")
 def index():
     form = RequestFeatureForm()
-    return render_template("index.html", form=form)
+    client_counts = get_features_counts_by_client()
+    priority_counts = get_priority_counts()
+
+    return render_template(
+        "index.html",
+        form=form,
+        client_counts=client_counts,
+        priority_counts=priority_counts,
+    )
 
 
 @features.route("/new", methods=["POST"])
@@ -71,7 +89,7 @@ def new():
 @features.route("/delete", methods=["POST"])
 def delete():
     message = {"status": "success"}
-    feature_request_id = request.form.get("feature_request_id")
+    feature_request_id = request.form.get("id")
     result = (
         db.session.query(FeatureRequest)
         .filter(FeatureRequest.id == feature_request_id)
@@ -113,10 +131,33 @@ def edit():
     return jsonify(message)
 
 
-@features.route("/list", methods=["POST"])
+@features.route("/list", methods=["GET"])
 def list():
-    result = [i.serialize for i in FeatureRequest.query.all()]
-    return jsonify(result)
+    """Check for query string parameters and return a list of feature requests"""
+    params = request.args.to_dict()
+    page = int(params.pop("page", 1))
+    limit = int(params.pop("limit", 5))
+    title = params.pop("title", None)
+    sort_on = params.pop("sortBy", None)
+    sort_direction = params.pop("direction", None)
+
+    order = None
+    if sort_on is not None:
+        order = getattr(SORTING_MAP[sort_on], sort_direction)()
+
+    if title is not None:
+        feature_requests = FeatureRequest.query.filter(
+            FeatureRequest.title.like("%{}%".format(title))
+        ).paginate(page=page, per_page=limit)
+    else:
+        feature_requests = (
+            FeatureRequest.query.filter_by(**params)
+            .order_by(order)
+            .paginate(page=page, per_page=limit)
+        )
+
+    result = [i.serialize for i in feature_requests.items]
+    return jsonify(records=result, total=feature_requests.total)
 
 
 def reset_priority(client_id, base_priority=None):
@@ -139,3 +180,68 @@ def reset_priority(client_id, base_priority=None):
         FeatureRequest.client_id == client_id, reach
     ).update({FeatureRequest.client_priority: FeatureRequest.client_priority + 1})
     db.session.commit()
+
+
+def get_features_counts_by_client():
+    """Creates a mapping between clients and all its feature counts"""
+    feature_counts = (
+        db.session.query(
+            FeatureRequest.client_id,
+            func.count(FeatureRequest.client_id).label("count"),
+        )
+        .group_by(FeatureRequest.client_id)
+        .subquery()
+    )
+    counts = (
+        db.session.query(Client.name, Client.id, feature_counts.c.count)
+        .join(feature_counts, feature_counts.c.client_id == Client.id)
+        .order_by(feature_counts.c.count.desc())
+        .all()
+    )
+
+    result = []
+    for client, client_id, count in counts:
+        data = {}
+        data["name"] = client
+        data["id"] = client_id
+        data["count"] = count
+        result.append(data)
+
+    return result
+
+
+def get_css_badge(severity):
+    """Map severity to a Bootstrap 4 css badge"""
+    badges = ["badge badge-danger count", "badge badge-info count"]
+    severities = [[1, 2, 3], [4, 5, 6, 7]]
+    for index, severity_list in enumerate(severities):
+        if severity in severity_list:
+            return badges[index]
+    else:
+        return "badge badge-light count"
+
+
+def get_priority_counts():
+    """
+    Get counts for all priority counts and return a dictionary that includes a css
+    helper.
+    """
+    counts = (
+        db.session.query(
+            FeatureRequest.client_priority, func.count(FeatureRequest.client_priority)
+        )
+        .group_by(FeatureRequest.client_priority)
+        .order_by(FeatureRequest.client_priority)
+        .all()
+    )
+
+    result = []
+    for priority, count in counts:
+        data = {}
+        badge = get_css_badge(priority)
+        data["priority"] = priority
+        data["count"] = count
+        data["css_badge"] = badge
+        result.append(data)
+
+    return result

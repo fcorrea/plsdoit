@@ -54,7 +54,8 @@ class FeatureRequest(db.Model):
             "description": self.description,
             "target_date": self.target_date.strftime("%m/%d/%Y"),
             "client": self.client.name,
-            "product_area": self.product_area.name,
+            "product_area_id": self.product_area.id,
+            "product_area_name": self.product_area.name,
             "client_priority": self.client_priority,
         }
 

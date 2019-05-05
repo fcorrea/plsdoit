@@ -5,6 +5,7 @@ from flask_testing import TestCase
 
 from .. import create_app
 from ..models import db, FeatureRequest
+from ..app import get_features_counts_by_client, get_priority_counts
 
 
 class TestFeatureRequestApp(TestCase):
@@ -24,12 +25,12 @@ class TestFeatureRequestApp(TestCase):
         db.session.remove()
         db.drop_all()
 
-    def _makeOne(self, title=None, client_priority=1):
+    def _makeOne(self, title=None, client_id=1, client_priority=1):
         data = dict(
             title=title or u"A new feature",
             description=u"A nice description",
             target_date=date(2019, 5, 1),
-            client_id=1,
+            client_id=client_id,
             client_priority=client_priority,
             product_area_id=2,
         )
@@ -39,7 +40,7 @@ class TestFeatureRequestApp(TestCase):
 
     def test_home(self):
         response = self.client.get("/")
-        assert b"List of feature requests" in response.data
+        assert b"Feature Requests" in response.data
         assert b"Request New Feature" in response.data
 
     def test_app(self):
@@ -145,7 +146,7 @@ class TestFeatureRequestApp(TestCase):
 
     def test_app_delete_feature_request(self):
         self._makeOne()
-        form_data = dict(feature_request_id=1)
+        form_data = dict(id=1)
         response = self.client.post("/delete", data=form_data)
         assert response.get_json() == {
             "status": "Successfully deleted new feature request"
@@ -155,7 +156,7 @@ class TestFeatureRequestApp(TestCase):
 
     def test_app_delete_feature_request_non_existing(self):
         self._makeOne()
-        form_data = dict(feature_request_id=2)
+        form_data = dict(id=2)
         response = self.client.post("/delete", data=form_data)
         assert response.get_json() == {"status": "Could not delete feature request"}
         result = db.session.query(FeatureRequest).count()
@@ -211,29 +212,84 @@ class TestFeatureRequestApp(TestCase):
         assert FeatureRequest.query.get(2).client_priority == 1
 
     def test_app_list(self):
-        self._makeOne(title=u"Feature with priority {}".format(1), client_priority=1)
-        self._makeOne(title=u"Feature with priority {}".format(2), client_priority=2)
+        for priority in range(1, 10):
+            self._makeOne(
+                title=u"Feature with priority {}".format(priority),
+                client_priority=priority,
+            )
+        self._makeOne(
+            title=u"Feature with priority 25", client_id=2, client_priority=25
+        )
 
-        response = self.client.post("/list")
-        a_date = date(2019, 5, 1).strftime("%m/%d/%Y")
+        response = self.client.get("/list")
+        assert response.get_json()["total"] == 10
+
+        form_data = dict(title=u"priority 9")
+        response_data = self.client.get("/list", query_string=form_data).get_json()
+        assert response_data["total"] == 1
+        item = response_data["records"][0]
+        assert "Feature with priority 9" == item["title"]
+
+        form_data = dict(sortBy=u"title", direction=u"desc")
+        response_data = self.client.get("/list", query_string=form_data).get_json()
+        assert response_data["total"] == 10
+        item = response_data["records"][0]
+        assert "Feature with priority 9" == item["title"]
+
+        form_data = dict(sortBy=u"client_priority", direction=u"desc")
+        response_data = self.client.get("/list", query_string=form_data).get_json()
+        assert response_data["total"] == 10
+        item = response_data["records"][0]
+        assert "Feature with priority 25" == item["title"]
+
+        form_data = dict(sortBy=u"client", direction=u"desc")
+        response_data = self.client.get("/list", query_string=form_data).get_json()
+        assert response_data["total"] == 10
+        item = response_data["records"][0]
+        assert "Feature with priority 25" == item["title"]
+
+        form_data = dict(limit=u"5", page=u"1")
+        response_data = self.client.get("/list", query_string=form_data).get_json()
+        assert response_data["total"] == 10
+        assert len(response_data["records"]) == 5
+        item = response_data["records"][0]
+        assert "Feature with priority 1" == item["title"]
+
+        form_data = dict(limit=u"5", page=u"2")
+        response_data = self.client.get("/list", query_string=form_data).get_json()
+        assert response_data["total"] == 10
+        assert len(response_data["records"]) == 5
+        item = response_data["records"][0]
+        assert "Feature with priority 6" == item["title"]
+
+    def test_feature_counts_by_client(self):
+        self._makeOne(title=u"Feature with priority 1", client_priority=1)
+        self._makeOne(title=u"Feature with priority 2", client_priority=2)
+        self._makeOne(title=u"Feature with priority 3", client_priority=1, client_id=2)
+
+        results = get_features_counts_by_client()
+        assert results[0]["name"] == "Client A"
+        assert results[0]["count"] == 2
+        assert results[1]["name"] == "Client B"
+        assert results[1]["count"] == 1
+
+    def test_priority_counts(self):
+        self._makeOne(title=u"Feature 1", client_priority=1)
+        self._makeOne(title=u"Feature 2", client_priority=2)
+        self._makeOne(title=u"Feature 3", client_priority=1, client_id=2)
+        self._makeOne(title=u"Feature 4", client_priority=1, client_id=3)
+        self._makeOne(title=u"Feature 5", client_priority=2, client_id=3)
+        self._makeOne(title=u"Feature 6", client_priority=3, client_id=3)
+        self._makeOne(title=u"Feature 7", client_priority=4, client_id=3)
+        self._makeOne(title=u"Feature 8", client_priority=8, client_id=3)
+
         expected = [
-            {
-                "client": "Client A",
-                "client_priority": 1,
-                "description": "A nice description",
-                "id": 1,
-                "product_area": "Billing",
-                "target_date": a_date,
-                "title": "Feature with priority 1",
-            },
-            {
-                "client": "Client A",
-                "client_priority": 2,
-                "description": "A nice description",
-                "id": 2,
-                "product_area": "Billing",
-                "target_date": a_date,
-                "title": "Feature with priority 2",
-            },
+            {"count": 3, "css_badge": "badge badge-danger count", "priority": 1},
+            {"count": 2, "css_badge": "badge badge-danger count", "priority": 2},
+            {"count": 1, "css_badge": "badge badge-danger count", "priority": 3},
+            {"count": 1, "css_badge": "badge badge-info count", "priority": 4},
+            {"count": 1, "css_badge": "badge badge-light count", "priority": 8},
         ]
-        assert response.get_json() == expected
+
+        results = get_priority_counts()
+        assert expected == results
