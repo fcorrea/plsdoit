@@ -16,7 +16,7 @@ wtforms-sqlalchemy = "*"
 wtforms-alchemy = "*"
 coverage = "*"
 pytest-cov = "*"
-mysqlclient = "*"
+pymysql = "*"
 
 [requires]
 python_version = "3.6"

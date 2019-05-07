@@ -7,7 +7,9 @@ from wtforms_alchemy import model_form_factory, ModelFormField, QuerySelectField
 from wtforms_alchemy.utils import choice_type_coerce_factory
 from sqlalchemy import func
 
-from .models import db, FeatureRequest, Client, ProductArea
+from .models import FeatureRequest, Client, ProductArea
+from .database import db_session
+from .pagination import QueryPagination
 
 features = Blueprint("features", __name__, template_folder="templates")
 
@@ -26,7 +28,9 @@ SORTING_MAP = {
 class ModelForm(BaseModelForm):
     @classmethod
     def get_session(self):
-        return db.session
+        from .database import db_session
+
+        return db_session
 
 
 class RequestFeatureForm(ModelForm):
@@ -68,7 +72,7 @@ def new():
         client_id = form.client_id.data
         client_priority = form.client_priority.data
         existing = (
-            db.session.query(FeatureRequest)
+            db_session.query(FeatureRequest)
             .filter(
                 FeatureRequest.client_id == client_id,
                 FeatureRequest.client_priority == client_priority,
@@ -80,8 +84,8 @@ def new():
 
         feature_request = FeatureRequest()
         form.populate_obj(feature_request)
-        db.session.add(feature_request)
-        db.session.commit()
+        db_session.add(feature_request)
+        db_session.commit()
 
     return jsonify(form.errors)
 
@@ -91,7 +95,7 @@ def delete():
     message = {"status": "success"}
     feature_request_id = request.form.get("id")
     result = (
-        db.session.query(FeatureRequest)
+        db_session.query(FeatureRequest)
         .filter(FeatureRequest.id == feature_request_id)
         .delete()
     )
@@ -99,21 +103,21 @@ def delete():
         message = {"status": "Successfully deleted new feature request"}
     else:
         message = {"status": "Could not delete feature request"}
-    db.session.commit()
+    db_session.commit()
     return jsonify(message)
 
 
 @features.route("/edit", methods=["POST"])
 def edit():
     id = request.form.get("feature_request_id")
-    feature_request = FeatureRequest.query.get_or_404(id)
+    feature_request = FeatureRequest.query.get(id)
     form = RequestFeatureForm(obj=feature_request)
     message = {"status": u"Successfully changed feature request."}
     if form.validate_on_submit():
         client_id = form.client_id.data
         client_priority = form.client_priority.data
         existing = (
-            db.session.query(FeatureRequest)
+            db_session.query(FeatureRequest)
             .filter(
                 FeatureRequest.client_id == client_id,
                 FeatureRequest.client_priority == client_priority,
@@ -126,7 +130,7 @@ def edit():
             message["status"] += u" Client priority was reset."
 
         form.populate_obj(feature_request)
-        db.session.commit()
+        db_session.commit()
 
     return jsonify(message)
 
@@ -148,13 +152,13 @@ def list():
     if title is not None:
         feature_requests = FeatureRequest.query.filter(
             FeatureRequest.title.like("%{}%".format(title))
-        ).paginate(page=page, per_page=limit)
-    else:
-        feature_requests = (
-            FeatureRequest.query.filter_by(**params)
-            .order_by(order)
-            .paginate(page=page, per_page=limit)
         )
+    else:
+        feature_requests = FeatureRequest.query.filter_by(**params).order_by(order)
+
+    feature_requests = QueryPagination(feature_requests).paginate(
+        page=page, per_page=limit
+    )
 
     result = [i.serialize for i in feature_requests.items]
     return jsonify(records=result, total=feature_requests.total)
@@ -163,29 +167,25 @@ def list():
 def reset_priority(client_id, base_priority=None):
     """Reset priority of ``FeatureRequest``s using ``base_priority``."""
     # Check for gaps
-    gap = (
-        db.session.query(FeatureRequest)
-        .filter(
-            FeatureRequest.client_id == client_id,
-            FeatureRequest.client_priority == base_priority + 1,
-        )
-        .count()
-    )
+    gap = FeatureRequest.query.filter(
+        FeatureRequest.client_id == client_id,
+        FeatureRequest.client_priority == base_priority + 1,
+    ).count()
     reach = (
         FeatureRequest.client_priority >= base_priority
         if gap
         else FeatureRequest.client_priority == base_priority
     )
-    db.session.query(FeatureRequest).filter(
-        FeatureRequest.client_id == client_id, reach
-    ).update({FeatureRequest.client_priority: FeatureRequest.client_priority + 1})
-    db.session.commit()
+    FeatureRequest.query.filter(FeatureRequest.client_id == client_id, reach).update(
+        {FeatureRequest.client_priority: FeatureRequest.client_priority + 1}
+    )
+    db_session.commit()
 
 
 def get_features_counts_by_client():
     """Creates a mapping between clients and all its feature counts"""
     feature_counts = (
-        db.session.query(
+        db_session.query(
             FeatureRequest.client_id,
             func.count(FeatureRequest.client_id).label("count"),
         )
@@ -193,7 +193,7 @@ def get_features_counts_by_client():
         .subquery()
     )
     counts = (
-        db.session.query(Client.name, Client.id, feature_counts.c.count)
+        db_session.query(Client.name, Client.id, feature_counts.c.count)
         .join(feature_counts, feature_counts.c.client_id == Client.id)
         .order_by(feature_counts.c.count.desc())
         .all()
@@ -227,7 +227,7 @@ def get_priority_counts():
     helper.
     """
     counts = (
-        db.session.query(
+        db_session.query(
             FeatureRequest.client_priority, func.count(FeatureRequest.client_priority)
         )
         .group_by(FeatureRequest.client_priority)

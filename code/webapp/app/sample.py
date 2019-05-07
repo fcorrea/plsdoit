@@ -2,7 +2,6 @@ from datetime import date
 from random import choice
 
 import click
-from flask import current_app
 from flask.cli import with_appcontext
 
 from .models import FeatureRequest
@@ -38,10 +37,9 @@ RANDOM_DESCRIPTIONS = [
 @click.command("load_sample")
 @with_appcontext
 def load_sample_data():
-    from .models import db
+    from .database import init_db, db_session
 
-    db.init_app(current_app)
-    db.create_all()
+    init_db()
 
     for i in range(1, 30):
         start_choice = choice(range(20))
@@ -63,6 +61,6 @@ def load_sample_data():
             client_priority=client_priority,
             product_area_id=product_area,
         )
-        db.session.add(feature_request)
+        db_session.add(feature_request)
 
-    db.session.commit()
+    db_session.commit()

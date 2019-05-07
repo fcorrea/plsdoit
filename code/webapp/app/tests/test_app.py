@@ -4,8 +4,9 @@ from datetime import date
 from flask_testing import TestCase
 
 from .. import create_app
-from ..models import db, FeatureRequest
+from ..models import FeatureRequest
 from ..app import get_features_counts_by_client, get_priority_counts
+from ..database import init_db, db_session, Base, engine
 
 
 class TestFeatureRequestApp(TestCase):
@@ -19,11 +20,11 @@ class TestFeatureRequestApp(TestCase):
         return app
 
     def setUp(self):
-        db.create_all()
+        init_db()
 
     def tearDown(self):
-        db.session.remove()
-        db.drop_all()
+        db_session.remove()
+        Base.metadata.drop_all(engine)
 
     def _makeOne(self, title=None, client_id=1, client_priority=1):
         data = dict(
@@ -35,8 +36,8 @@ class TestFeatureRequestApp(TestCase):
             product_area_id=2,
         )
         feature_request = FeatureRequest(**data)
-        db.session.add(feature_request)
-        db.session.commit()
+        db_session.add(feature_request)
+        db_session.commit()
 
     def test_home(self):
         response = self.client.get("/")
@@ -54,7 +55,7 @@ class TestFeatureRequestApp(TestCase):
             submit=True,
         )
         self.client.post("/new", data=form_data)
-        result = db.session.query(FeatureRequest)
+        result = db_session.query(FeatureRequest)
         assert result.count() == 1
         assert result.one().title == u"A new feature"
 
@@ -71,7 +72,7 @@ class TestFeatureRequestApp(TestCase):
         )
         response = self.client.post("/new", data=form_data)
         assert response.get_json() == {"title": ["Already exists."]}
-        assert db.session.query(FeatureRequest).count() == 1
+        assert db_session.query(FeatureRequest).count() == 1
 
     def test_app_reorder_priorities(self):
         for priority in range(1, 4):
@@ -91,14 +92,14 @@ class TestFeatureRequestApp(TestCase):
         )
         self.client.post("/new", data=form_data)
         result = (
-            db.session.query(FeatureRequest)
+            db_session.query(FeatureRequest)
             .filter(FeatureRequest.client_priority == 1)
             .one()
         )
         assert result.title == u"A new feature"
         # Lookup the existing feature request and check if it got its client_priority reset
         result = (
-            db.session.query(FeatureRequest)
+            db_session.query(FeatureRequest)
             .filter(FeatureRequest.client_priority == 2)
             .one()
         )
@@ -121,14 +122,14 @@ class TestFeatureRequestApp(TestCase):
         )
         self.client.post("/new", data=form_data)
         result = (
-            db.session.query(FeatureRequest)
+            db_session.query(FeatureRequest)
             .filter(FeatureRequest.client_priority == 1)
             .one()
         )
         assert result.title == u"A new feature"
         # client_priority 4 and 5 should not be affected as there's a gap
         result = (
-            db.session.query(FeatureRequest)
+            db_session.query(FeatureRequest)
             .filter(FeatureRequest.client_priority.in_((4, 5)))
             .all()
         )
@@ -138,7 +139,7 @@ class TestFeatureRequestApp(TestCase):
         assert result[1].title == u"Feature with priority 5"
         assert result[1].client_priority == 5
         result = (
-            db.session.query(FeatureRequest)
+            db_session.query(FeatureRequest)
             .filter(FeatureRequest.client_priority == 3)
             .count()
         )
@@ -151,7 +152,7 @@ class TestFeatureRequestApp(TestCase):
         assert response.get_json() == {
             "status": "Successfully deleted new feature request"
         }
-        result = db.session.query(FeatureRequest).count()
+        result = db_session.query(FeatureRequest).count()
         assert result == 0
 
     def test_app_delete_feature_request_non_existing(self):
@@ -159,7 +160,7 @@ class TestFeatureRequestApp(TestCase):
         form_data = dict(id=2)
         response = self.client.post("/delete", data=form_data)
         assert response.get_json() == {"status": "Could not delete feature request"}
-        result = db.session.query(FeatureRequest).count()
+        result = db_session.query(FeatureRequest).count()
         assert result == 1
 
     def test_app_edit_feature_request(self):
@@ -180,7 +181,7 @@ class TestFeatureRequestApp(TestCase):
         assert response.get_json() == {
             "status": "Successfully changed feature request."
         }
-        result = db.session.query(FeatureRequest).one()
+        result = db_session.query(FeatureRequest).one()
         assert result.description == u"A nice description changed"
 
     def test_app_edit_feature_request_change_priority(self):
@@ -204,7 +205,7 @@ class TestFeatureRequestApp(TestCase):
         }
         # A reorder happened. The first FeatureRequest is now the second.
         result = (
-            db.session.query(FeatureRequest)
+            db_session.query(FeatureRequest)
             .filter(FeatureRequest.client_priority == 2)
             .one()
         )
