@@ -75,7 +75,7 @@ If you want to monitor the startup sequence, run:
 $ docker-compose logs -f
 ```
 
-Once PLSDoIt is up, you can reach it at [http://127.0.0.1:5000](http://127.0.0.1:5000)
+Once PLSDoIt is up, you can reach it at [http://127.0.0.1](http://127.0.0.1)
 
 ### Sample Data
 
