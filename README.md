@@ -32,7 +32,7 @@ Make sure to have [Docker](https://www.docker.com/get-started) and [docker-compo
 
 ### Checkout
 
-Once you have verified that both and installed and working, proceed to checkout this repository with the following command:
+Once you have verified that both docker and docker-compose are installed and working, proceed to checkout this repository with the following command:
 
 ```shell
 $ git clone https://github.com/fcorrea/plsdoit
